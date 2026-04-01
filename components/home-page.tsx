@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronRight, TrendingUp, Shield, Zap, ArrowRight, MapPin,
-  Instagram, Facebook, Youtube, Send,
+  Instagram, Facebook, Youtube, Mail, X, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ListingCard } from "@/components/listing-card";
@@ -38,6 +38,10 @@ const uiText: Record<string, Record<Language, string>> = {
   footerRules: { uk: "Правила", ru: "Правила" },
   footerPrivacy: { uk: "Політика конфіденційності", ru: "Политика конфиденциальности" },
   footerSocial: { uk: "Ми в соцмережах:", ru: "Мы в соцсетях:" },
+  footerSupport: { uk: "Написати в підтримку", ru: "Написать в поддержку" },
+  supportTitle: { uk: "Підтримка", ru: "Поддержка" },
+  supportTg: { uk: "Підтримка Telegram:", ru: "Поддержка Telegram:" },
+  supportEmail: { uk: "Електронна пошта:", ru: "Электронная почта:" },
   footerCopy: {
     uk: "2026 © Amara Market — маркетплейс товарів, послуг та цифрових активів. Усі права захищені.",
     ru: "2026 © Amara Market — маркетплейс товаров, услуг и цифровых активов. Все права защищены.",
@@ -48,12 +52,23 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory || "all");
   const [showAll, setShowAll] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const supportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialCategory) setActiveCategory(initialCategory);
   }, [initialCategory]);
 
-  const visibleCategories = showAll ? categories : categories.slice(0, 8);
+  useEffect(() => {
+    if (!supportOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (supportRef.current && !supportRef.current.contains(e.target as Node)) {
+        setSupportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [supportOpen]);
 
   const filteredListings =
     activeCategory === "all"
@@ -147,36 +162,66 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
             </button>
           </div>
 
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-            {visibleCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() =>
-                  setActiveCategory(cat.id === activeCategory ? "all" : cat.id)
-                }
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${
-                  activeCategory === cat.id
-                    ? "bg-primary border-primary text-primary-foreground shadow-md"
-                    : "bg-card border-border hover:border-primary/40 hover:bg-secondary text-foreground"
-                }`}
-              >
-                <span className="text-2xl" aria-hidden>{cat.icon}</span>
-                <span className="text-[11px] font-medium leading-tight line-clamp-2">
-                  {cat.label}
-                </span>
-                <span
-                  className={`text-[10px] ${
+          {/* Household zone */}
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2 py-0.5 bg-secondary rounded-full">
+                {language === "uk" ? "Побутова зона" : "Бытовая зона"}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+              {(showAll ? categories.filter(c => c.zone === "household") : categories.filter(c => c.zone === "household").slice(0, 8)).map((cat) => (
+                <a
+                  key={cat.id}
+                  href={cat.slug}
+                  onClick={(e) => { e.preventDefault(); setActiveCategory(cat.id === activeCategory ? "all" : cat.id); }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${
                     activeCategory === cat.id
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
+                      ? "bg-primary border-primary text-primary-foreground shadow-md"
+                      : "bg-card border-border hover:border-primary/40 hover:bg-secondary text-foreground"
                   }`}
                 >
-                  {cat.count >= 1000
-                    ? `${Math.floor(cat.count / 1000)}K+`
-                    : String(cat.count)}
-                </span>
-              </button>
-            ))}
+                  <span className="text-2xl" aria-hidden>{cat.icon}</span>
+                  <span className="text-[11px] font-medium leading-tight line-clamp-2">
+                    {cat.label}
+                  </span>
+                  <span className={`text-[10px] ${activeCategory === cat.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    {cat.count >= 1000 ? `${Math.floor(cat.count / 1000)}K+` : String(cat.count)}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Digital zone */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2 py-0.5 bg-secondary rounded-full">
+                {language === "uk" ? "Цифрова зона" : "Цифровая зона"}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+              {(showAll ? categories.filter(c => c.zone === "digital") : categories.filter(c => c.zone === "digital").slice(0, 6)).map((cat) => (
+                <a
+                  key={cat.id}
+                  href={cat.slug}
+                  onClick={(e) => { e.preventDefault(); setActiveCategory(cat.id === activeCategory ? "all" : cat.id); }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${
+                    activeCategory === cat.id
+                      ? "bg-primary border-primary text-primary-foreground shadow-md"
+                      : "bg-card border-border hover:border-primary/40 hover:bg-secondary text-foreground"
+                  }`}
+                >
+                  <span className="text-2xl" aria-hidden>{cat.icon}</span>
+                  <span className="text-[11px] font-medium leading-tight line-clamp-2">
+                    {cat.label}
+                  </span>
+                  <span className={`text-[10px] ${activeCategory === cat.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    {cat.count >= 1000 ? `${Math.floor(cat.count / 1000)}K+` : String(cat.count)}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -246,14 +291,13 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
 
       {/* Footer */}
       <footer className="border-t border-border bg-card mt-12">
-        <div className="max-w-screen-xl mx-auto px-4 py-8">
+        <div className="max-w-screen-xl mx-auto px-4 py-8 space-y-5">
+
+          {/* Row 1: copyright + policy links */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Copyright */}
             <p className="text-sm text-muted-foreground text-center md:text-left leading-relaxed">
               {t("footerCopy")}
             </p>
-
-            {/* Links */}
             <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap justify-center">
               <a href="#rules" className="hover:text-primary transition-colors">
                 {t("footerRules")}
@@ -265,45 +309,121 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
             </div>
           </div>
 
-          {/* Social */}
-          <div className="flex items-center gap-4 mt-5 justify-center md:justify-start">
-            <span className="text-sm text-muted-foreground">{t("footerSocial")}</span>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
-              aria-label="Instagram"
-            >
-              <Instagram className="w-4 h-4" />
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
-              aria-label="Facebook"
-            >
-              <Facebook className="w-4 h-4" />
-            </a>
-            <a
-              href="https://t.me"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
-              aria-label="Telegram"
-            >
-              <Send className="w-4 h-4" />
-            </a>
-            <a
-              href="https://youtube.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
-              aria-label="YouTube"
-            >
-              <Youtube className="w-4 h-4" />
-            </a>
+          {/* Row 2: social + support */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Social */}
+            <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
+              <span className="text-sm text-muted-foreground font-medium">{t("footerSocial")}</span>
+              <a
+                href="https://t.me/amara_market"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#229ED9] hover:bg-[#1a8bbf] flex items-center justify-center text-white transition-colors shadow-sm"
+                aria-label="Telegram Amara Market"
+              >
+                {/* Official Telegram paper-plane SVG */}
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white" aria-hidden="true">
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center text-muted-foreground transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* Support button with popover */}
+            <div className="relative" ref={supportRef}>
+              <button
+                onClick={() => setSupportOpen((v) => !v)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:bg-secondary hover:border-primary/40 text-sm font-medium text-foreground transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 text-primary" />
+                {t("footerSupport")}
+              </button>
+
+              {supportOpen && (
+                <div className="absolute bottom-full right-0 mb-3 w-72 bg-card border border-border rounded-2xl shadow-xl p-5 z-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-foreground text-base">{t("supportTitle")}</h3>
+                    <button
+                      onClick={() => setSupportOpen(false)}
+                      className="w-6 h-6 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Закрити"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Telegram support */}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                        {t("supportTg")}
+                      </p>
+                      <a
+                        href="https://t.me/Amara_market_bot"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-[#229ED9]/10 hover:bg-[#229ED9]/20 transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#229ED9] flex items-center justify-center shrink-0">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white" aria-hidden="true">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground group-hover:text-[#1a8bbf] transition-colors">@Amara_market_bot</p>
+                          <p className="text-xs text-muted-foreground">Telegram Bot</p>
+                        </div>
+                      </a>
+                    </div>
+
+                    {/* Email support */}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                        {t("supportEmail")}
+                      </p>
+                      <a
+                        href="mailto:tp@amara.markets?subject=Звернення до підтримки Amara Market&body=Доброго дня!%0A%0AОпишіть вашу проблему:%0A"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-secondary hover:bg-primary/10 transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                          <Mail className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">tp@amara.markets</p>
+                          <p className="text-xs text-muted-foreground">Email</p>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </footer>

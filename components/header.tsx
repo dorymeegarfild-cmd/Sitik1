@@ -93,35 +93,19 @@ export function Header({ darkMode, onToggleDark, currentPage, onNavigate, langua
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Language toggle — UA / RU, no flags */}
-          <div className="hidden sm:flex items-center rounded-full border border-border overflow-hidden select-none text-xs font-bold">
-            <button
-              onClick={() => language !== "uk" && onToggleLanguage()}
-              className="flex items-center justify-center px-2.5 py-1 transition-colors"
-              style={
-                language === "uk"
-                  ? { background: "linear-gradient(to bottom, #005BBB 50%, #FFD500 50%)", color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }
-                  : { background: "transparent", color: "var(--muted-foreground)" }
-              }
-              aria-label="Українська мова"
-              aria-pressed={language === "uk"}
-            >
-              UA
-            </button>
-            <button
-              onClick={() => language !== "ru" && onToggleLanguage()}
-              className="flex items-center justify-center px-2.5 py-1 transition-colors"
-              style={
-                language === "ru"
-                  ? { background: "var(--secondary)", color: "var(--foreground)" }
-                  : { background: "transparent", color: "var(--muted-foreground)" }
-              }
-              aria-label="Русский язык"
-              aria-pressed={language === "ru"}
-            >
-              RU
-            </button>
-          </div>
+          {/* Language toggle — shows only current language, click to switch */}
+          <button
+            onClick={onToggleLanguage}
+            className="hidden sm:flex items-center justify-center h-7 px-2.5 rounded-full border border-border text-xs font-bold select-none transition-colors hover:border-primary/50 hover:bg-secondary"
+            style={
+              language === "uk"
+                ? { background: "linear-gradient(to bottom, #005BBB 50%, #FFD500 50%)", color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.5)", borderColor: "transparent" }
+                : { background: "var(--secondary)", color: "var(--foreground)" }
+            }
+            aria-label={language === "uk" ? "Переключити на російську" : "Переключити на українську"}
+          >
+            {language === "uk" ? "UA" : "RU"}
+          </button>
 
           {/* SHOP */}
           <button

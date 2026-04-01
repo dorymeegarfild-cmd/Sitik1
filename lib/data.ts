@@ -180,22 +180,22 @@ export const listings: Listing[] = [
 ];
 
 export const categories = [
-  { id: "children", label: "Дитячий світ", icon: "🧸", count: 4821 },
-  { id: "realty", label: "Нерухомість", icon: "🏠", count: 12430 },
-  { id: "auto", label: "Авто", icon: "🚗", count: 9870 },
-  { id: "parts", label: "Запчастини", icon: "🔧", count: 6543 },
-  { id: "work", label: "Робота", icon: "💼", count: 3210 },
-  { id: "animals", label: "Тварини", icon: "🐾", count: 2187 },
-  { id: "garden", label: "Дім і сад", icon: "🌿", count: 5670 },
-  { id: "electronics", label: "Електроніка", icon: "📱", count: 18920 },
-  { id: "business", label: "Бізнес і послуги", icon: "💡", count: 4320 },
-  { id: "rental", label: "Оренда і прокат", icon: "🔑", count: 2891 },
-  { id: "fashion", label: "Мода і стиль", icon: "👗", count: 7650 },
-  { id: "hobby", label: "Хобі і спорт", icon: "⚽", count: 3421 },
-  { id: "free", label: "Віддам даром", icon: "🎁", count: 1230 },
-  { id: "exchange", label: "Обмін", icon: "🔄", count: 890 },
-  { id: "gamers", label: "Товари для геймерів", icon: "🎮", count: 4120 },
-  { id: "tires", label: "Шини та диски", icon: "🛞", count: 2760 },
+  // --- Побутова зона ---
+  { id: "moda-i-stil",         label: "Мода і стиль",      icon: "👗", count: 7650,  zone: "household", slug: "/category/moda-i-stil" },
+  { id: "elektronika",         label: "Електроніка",        icon: "📱", count: 18920, zone: "household", slug: "/category/elektronika" },
+  { id: "transport",           label: "Транспорт",          icon: "🚗", count: 9870,  zone: "household", slug: "/category/transport" },
+  { id: "nerukhomist",         label: "Нерухомість",        icon: "🏠", count: 12430, zone: "household", slug: "/category/nerukhomist" },
+  { id: "dim-i-sad",           label: "Дім і сад",          icon: "🌿", count: 5670,  zone: "household", slug: "/category/dim-i-sad" },
+  { id: "robota",              label: "Робота",             icon: "💼", count: 3210,  zone: "household", slug: "/category/robota" },
+  { id: "posluhy",             label: "Послуги",            icon: "🛠️", count: 4320,  zone: "household", slug: "/category/posluhy" },
+  { id: "khobi-i-vidpochynok", label: "Хобі і відпочинок", icon: "⚽", count: 3421,  zone: "household", slug: "/category/khobi-i-vidpochynok" },
+  // --- Цифрова зона ---
+  { id: "ihrovi-akaunty",      label: "Ігрові акаунти",     icon: "🎮", count: 4120,  zone: "digital",   slug: "/category/ihrovi-akaunty" },
+  { id: "klyuchi-ta-po",       label: "Ключі та ПО",        icon: "🔑", count: 2891,  zone: "digital",   slug: "/category/klyuchi-ta-po" },
+  { id: "haydy-ta-kursy",      label: "Гайди і Курси",      icon: "📚", count: 1540,  zone: "digital",   slug: "/category/haydy-ta-kursy" },
+  { id: "rozrobka-botiv",      label: "Розробка ботів",     icon: "🤖", count: 890,   zone: "digital",   slug: "/category/rozrobka-botiv" },
+  { id: "dyzayn",              label: "Дизайн",             icon: "🎨", count: 1230,  zone: "digital",   slug: "/category/dyzayn" },
+  { id: "prohramuvannya",      label: "Програмування",      icon: "💻", count: 1680,  zone: "digital",   slug: "/category/prohramuvannya" },
 ];
 
 export function formatPrice(price: number): string {
