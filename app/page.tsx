@@ -8,17 +8,20 @@ import { SettingsPage } from "@/components/settings-page";
 import { ChatsPage } from "@/components/chats-page";
 import { PostAdPage } from "@/components/post-ad-page";
 import { ShopPage } from "@/components/shop-page";
+import { ListingPage } from "@/components/listing-page";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Heart } from "lucide-react";
 
-export type Page = "home" | "profile" | "favorites" | "chats" | "settings" | "category" | "post" | "shop";
+export type Page = "home" | "profile" | "favorites" | "chats" | "settings" | "category" | "post" | "shop" | "listing";
 export type Language = "uk" | "ru";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeListing, setActiveListing] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState<Language>("uk");
+  const [paginationMode, setPaginationMode] = useState<"auto" | "manual">("auto");
 
   // Sync dark mode with document
   useEffect(() => {
@@ -33,7 +36,7 @@ export default function App() {
       const hash = window.location.hash.replace("#", "") || "home";
       const parts = hash.split("/");
       const page = parts[0] as Page;
-      const validPages: Page[] = ["home", "profile", "favorites", "chats", "settings", "category", "shop"];
+      const validPages: Page[] = ["home", "profile", "favorites", "chats", "settings", "category", "shop", "listing"];
       if (validPages.includes(page)) {
         setCurrentPage(page);
         if (page === "category" && parts[1]) setActiveCategory(parts[1]);
@@ -51,6 +54,9 @@ export default function App() {
     if (page === "category" && sub) {
       setActiveCategory(sub);
       window.location.hash = `#category/${sub}`;
+    } else if (page === "listing" && sub) {
+      setActiveListing(sub);
+      window.location.hash = `#listing/${sub}`;
     } else {
       window.location.hash = `#${page}`;
     }
@@ -69,16 +75,23 @@ export default function App() {
 
       <div className="pb-16 md:pb-0">
         {currentPage === "home" && (
-          <HomePage onNavigate={navigate} initialCategory={activeCategory} language={language} />
+          <HomePage onNavigate={navigate} initialCategory={activeCategory} language={language} paginationMode={paginationMode} />
         )}
         {currentPage === "category" && (
-          <HomePage onNavigate={navigate} initialCategory={activeCategory} language={language} />
+          <HomePage onNavigate={navigate} initialCategory={activeCategory} language={language} paginationMode={paginationMode} />
         )}
         {currentPage === "profile" && (
           <ProfilePage onNavigate={navigate} language={language} />
         )}
         {currentPage === "settings" && (
-          <SettingsPage onNavigate={navigate} onToggleDark={() => setDarkMode(!darkMode)} darkMode={darkMode} language={language} />
+          <SettingsPage
+            onNavigate={navigate}
+            onToggleDark={() => setDarkMode(!darkMode)}
+            darkMode={darkMode}
+            language={language}
+            paginationMode={paginationMode}
+            onTogglePagination={() => setPaginationMode((m) => m === "auto" ? "manual" : "auto")}
+          />
         )}
         {currentPage === "favorites" && (
           <div className="max-w-screen-xl mx-auto px-4 py-10 text-center text-muted-foreground">
@@ -101,6 +114,9 @@ export default function App() {
         )}
         {currentPage === "shop" && (
           <ShopPage onNavigate={navigate} language={language} />
+        )}
+        {currentPage === "listing" && (
+          <ListingPage onNavigate={navigate} language={language} listingId={activeListing} />
         )}
       </div>
 

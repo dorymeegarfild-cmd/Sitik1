@@ -15,6 +15,8 @@ interface SettingsPageProps {
   onToggleDark: () => void;
   darkMode: boolean;
   language: Language;
+  paginationMode: "auto" | "manual";
+  onTogglePagination: () => void;
 }
 
 type SettingItem = {
@@ -61,7 +63,7 @@ function Toggle({ on, onFlip }: { on: boolean; onFlip: () => void }) {
   );
 }
 
-export function SettingsPage({ onNavigate, onToggleDark, darkMode, language }: SettingsPageProps) {
+export function SettingsPage({ onNavigate, onToggleDark, darkMode, language, paginationMode, onTogglePagination }: SettingsPageProps) {
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     notif_new: true,
     notif_deals: false,
@@ -111,9 +113,29 @@ export function SettingsPage({ onNavigate, onToggleDark, darkMode, language }: S
         <Toggle on={darkMode} onFlip={onToggleDark} />
       </div>
 
+      {/* Pagination mode toggle */}
+      <div
+        onClick={onTogglePagination}
+        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-card border border-border hover:bg-secondary transition-colors cursor-pointer mb-1"
+      >
+        <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+          <span className="text-sm font-bold text-muted-foreground">{paginationMode === "auto" ? "∞" : "1…"}</span>
+        </div>
+        <div className="flex-1">
+          <span className="text-sm font-medium text-foreground block">
+            {language === "uk" ? "Прокрутка стрічки" : "Прокрутка ленты"}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {paginationMode === "auto"
+              ? (language === "uk" ? "Автоматично — підвантажується при прокрутці" : "Автоматически — подгружается при скролле")
+              : (language === "uk" ? "Ручна — нумерація сторінок 1, 2, 3…" : "Ручная — нумерация страниц 1, 2, 3…")}
+          </span>
+        </div>
+        <Toggle on={paginationMode === "auto"} onFlip={onTogglePagination} />
+      </div>
+
       {/* Account */}
-      <SectionTitle>{language === "uk" ? "Акаунт" : "Аккаунт"}</SectionTitle>
-      <div className="flex flex-col gap-2">
+      <SectionTitle>{language === "uk" ? "Акаунт" : "Аккаунт"}</SectionTitle>      <div className="flex flex-col gap-2">
         {accountItems.map((item) => (
           <button
             key={item.id}

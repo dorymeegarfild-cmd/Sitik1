@@ -7,15 +7,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ListingCard } from "@/components/listing-card";
-import { ListingDetail } from "@/components/listing-detail";
 import { listings, categories } from "@/lib/data";
-import { type Listing } from "@/lib/data";
+import { cn } from "@/lib/utils";
 import type { Page, Language } from "@/app/page";
 
 interface HomePageProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (page: Page, sub?: string) => void;
   initialCategory?: string | null;
   language: Language;
+  paginationMode?: "auto" | "manual";
 }
 
 const uiText: Record<string, Record<Language, string>> = {
@@ -48,16 +48,35 @@ const uiText: Record<string, Record<Language, string>> = {
   },
 };
 
-export function HomePage({ onNavigate, initialCategory, language }: HomePageProps) {
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+export function HomePage({ onNavigate, initialCategory, language, paginationMode = "auto" }: HomePageProps) {
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory || "all");
   const [showAll, setShowAll] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const supportRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 6;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialCategory) setActiveCategory(initialCategory);
+    setPage(1);
   }, [initialCategory]);
+
+  // Reset pagination when category changes
+  useEffect(() => { setPage(1); }, [activeCategory]);
+
+  // Infinite scroll observer (auto mode)
+  useEffect(() => {
+    if (paginationMode !== "auto") return;
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setPage((p) => p + 1); },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [paginationMode]);
 
   useEffect(() => {
     if (!supportOpen) return;
@@ -70,6 +89,8 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
     return () => document.removeEventListener("mousedown", handler);
   }, [supportOpen]);
 
+  const t = (key: string) => uiText[key]?.[language] ?? key;
+
   const filteredListings =
     activeCategory === "all"
       ? listings
@@ -77,7 +98,8 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
           l.category.toLowerCase().includes(activeCategory.replace(/-/g, " "))
         );
 
-  const t = (key: string) => uiText[key]?.[language] ?? key;
+  const pagedListings = filteredListings.slice(0, page * PAGE_SIZE);
+  const hasMore = pagedListings.length < filteredListings.length;
 
   return (
     <main className="min-h-screen">
@@ -163,65 +185,109 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
             </button>
           </div>
 
+          {/* "All" quick pill */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+            <button
+              onClick={() => setActiveCategory("all")}
+              className={`shrink-0 px-4 py-1.5 rounded-full border text-sm font-semibold transition-all ${
+                activeCategory === "all"
+                  ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                  : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {language === "uk" ? "Усі" : "Все"}
+            </button>
+          </div>
+
           {/* Household zone */}
-          <div className="mb-5">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2 py-0.5 bg-secondary rounded-full">
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span className="text-[11px]">🏠</span>
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {language === "uk" ? "Побутова зона" : "Бытовая зона"}
               </span>
+              <div className="flex-1 h-px bg-border" />
             </div>
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-              {(showAll ? categories.filter(c => c.zone === "household") : categories.filter(c => c.zone === "household").slice(0, 8)).map((cat) => (
-                <a
-                  key={cat.id}
-                  href={cat.slug}
-                  onClick={(e) => { e.preventDefault(); setActiveCategory(cat.id === activeCategory ? "all" : cat.id); }}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${
-                    activeCategory === cat.id
-                      ? "bg-primary border-primary text-primary-foreground shadow-md"
-                      : "bg-card border-border hover:border-primary/40 hover:bg-secondary text-foreground"
-                  }`}
-                >
-                  <span className="text-2xl" aria-hidden>{cat.icon}</span>
-                  <span className="text-[11px] font-medium leading-tight line-clamp-2">
-                    {cat.label}
-                  </span>
-                  <span className={`text-[10px] ${activeCategory === cat.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {cat.count >= 1000 ? `${Math.floor(cat.count / 1000)}K+` : String(cat.count)}
-                  </span>
-                </a>
-              ))}
+            <div className={`grid gap-2 ${showAll ? "grid-cols-4 sm:grid-cols-6 md:grid-cols-8" : "grid-cols-4 sm:grid-cols-6 md:grid-cols-8"}`}>
+              {(showAll
+                ? categories.filter((c) => c.zone === "household")
+                : categories.filter((c) => c.zone === "household")
+              ).map((cat) => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <a
+                    key={cat.id}
+                    href={cat.slug}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveCategory(cat.id === activeCategory ? "all" : cat.id);
+                    }}
+                    className={`group flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center cursor-pointer select-none ${
+                      isActive
+                        ? "bg-primary border-primary shadow-md scale-[0.97]"
+                        : "bg-card border-border hover:border-primary/40 hover:bg-secondary hover:scale-[0.98]"
+                    }`}
+                  >
+                    <span className="text-xl leading-none" aria-hidden>{cat.icon}</span>
+                    <span className={`text-[11px] font-semibold leading-tight line-clamp-2 ${isActive ? "text-primary-foreground" : "text-foreground"}`}>
+                      {cat.label}
+                    </span>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                      isActive ? "bg-white/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
+                    }`}>
+                      {cat.count >= 1000 ? `${Math.floor(cat.count / 1000)}K` : cat.count}
+                    </span>
+                  </a>
+                );
+              })}
             </div>
           </div>
 
           {/* Digital zone */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2 py-0.5 bg-secondary rounded-full">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span className="text-[11px]">💻</span>
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {language === "uk" ? "Цифрова зона" : "Цифровая зона"}
               </span>
+              <div className="flex-1 h-px bg-border" />
             </div>
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-              {(showAll ? categories.filter(c => c.zone === "digital") : categories.filter(c => c.zone === "digital").slice(0, 6)).map((cat) => (
-                <a
-                  key={cat.id}
-                  href={cat.slug}
-                  onClick={(e) => { e.preventDefault(); setActiveCategory(cat.id === activeCategory ? "all" : cat.id); }}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${
-                    activeCategory === cat.id
-                      ? "bg-primary border-primary text-primary-foreground shadow-md"
-                      : "bg-card border-border hover:border-primary/40 hover:bg-secondary text-foreground"
-                  }`}
-                >
-                  <span className="text-2xl" aria-hidden>{cat.icon}</span>
-                  <span className="text-[11px] font-medium leading-tight line-clamp-2">
-                    {cat.label}
-                  </span>
-                  <span className={`text-[10px] ${activeCategory === cat.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {cat.count >= 1000 ? `${Math.floor(cat.count / 1000)}K+` : String(cat.count)}
-                  </span>
-                </a>
-              ))}
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {(showAll
+                ? categories.filter((c) => c.zone === "digital")
+                : categories.filter((c) => c.zone === "digital")
+              ).map((cat) => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <a
+                    key={cat.id}
+                    href={cat.slug}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveCategory(cat.id === activeCategory ? "all" : cat.id);
+                    }}
+                    className={`group flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center cursor-pointer select-none ${
+                      isActive
+                        ? "bg-primary border-primary shadow-md scale-[0.97]"
+                        : "bg-card border-border hover:border-primary/40 hover:bg-secondary hover:scale-[0.98]"
+                    }`}
+                  >
+                    <span className="text-xl leading-none" aria-hidden>{cat.icon}</span>
+                    <span className={`text-[11px] font-semibold leading-tight line-clamp-2 ${isActive ? "text-primary-foreground" : "text-foreground"}`}>
+                      {cat.label}
+                    </span>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                      isActive ? "bg-white/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
+                    }`}>
+                      {cat.count >= 1000 ? `${Math.floor(cat.count / 1000)}K` : cat.count}
+                    </span>
+                  </a>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -245,7 +311,7 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
                   key={listing.id}
                   listing={listing}
                   language={language}
-                  onClick={() => setSelectedListing(listing)}
+                  onClick={() => onNavigate("listing", listing.id)}
                 />
               ))}
           </div>
@@ -268,25 +334,50 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
 
           {/* 2 cols on mobile, 3 on lg */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {filteredListings.map((listing) => (
+            {pagedListings.map((listing) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}
                 language={language}
-                onClick={() => setSelectedListing(listing)}
+                onClick={() => onNavigate("listing", listing.id)}
               />
             ))}
           </div>
 
-          <div className="flex justify-center mt-8">
-            <Button
-              variant="outline"
-              className="rounded-full px-8 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              {t("loadMore")}
-              <ArrowRight className="w-4 h-4 ml-2" aria-hidden />
-            </Button>
-          </div>
+          {/* Pagination / infinite scroll trigger */}
+          {paginationMode === "auto" ? (
+            <div ref={loadMoreRef} className="flex justify-center mt-8 h-10">
+              {hasMore && (
+                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" aria-label="Завантаження" />
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              {[1, 2, 3, 4].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    "w-9 h-9 rounded-full border text-sm font-semibold transition-colors",
+                    page === p
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  )}
+                >
+                  {p}
+                </button>
+              ))}
+              {hasMore && (
+                <button
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-4 h-9 rounded-full border border-border bg-card text-sm font-semibold text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
+                >
+                  {language === "uk" ? "Більше" : "Больше"}
+                  <ArrowRight className="w-3.5 h-3.5 ml-1 inline" />
+                </button>
+              )}
+            </div>
+          )}
         </section>
       </div>
 
