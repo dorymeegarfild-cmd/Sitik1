@@ -121,7 +121,8 @@ export function HomePage({ onNavigate, initialCategory, language }: HomePageProp
               <Button
                 size="sm"
                 variant="outline"
-                className="border-white/50 text-white hover:bg-white/10 rounded-full px-5"
+                className="border-white text-white hover:bg-white/20 rounded-full px-5 bg-white/10"
+                style={{ borderColor: "rgba(255,255,255,0.8)" }}
               >
                 {t("viewAll")}
               </Button>

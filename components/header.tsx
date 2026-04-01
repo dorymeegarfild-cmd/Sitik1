@@ -109,9 +109,12 @@ export function Header({ darkMode, onToggleDark, currentPage, onNavigate, langua
 
           {/* SHOP */}
           <button
-            onClick={() => onNavigate("home")}
-            className="hidden sm:flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-secondary transition-colors text-sm text-muted-foreground hover:text-foreground"
-            aria-label="SHOP"
+            onClick={() => onNavigate("shop")}
+            className={cn(
+              "hidden sm:flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-secondary transition-colors text-sm hover:text-foreground",
+              currentPage === "shop" ? "text-primary" : "text-muted-foreground"
+            )}
+            aria-label="Amara SHOP"
           >
             <ShoppingBag className="w-4 h-4" />
             <span className="hidden lg:block text-xs font-medium">{uiText.shop[language]}</span>

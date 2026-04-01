@@ -30,6 +30,7 @@ interface Chat {
   tab: "buying" | "selling";
   listingTitle: string;
   listingPrice: string;
+  listingImage?: string;
   messages: Message[];
 }
 
@@ -47,6 +48,7 @@ const chats: Chat[] = [
     tab: "buying",
     listingTitle: "iPhone 14 Pro 256GB",
     listingPrice: "28 500 ₴",
+    listingImage: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=80&h=80&fit=crop&auto=format",
     messages: [
       { id: "m1", text: "Привіт! Цікавить ваш iPhone. Торг є?", time: "12:30", isOwn: true, status: "read" },
       { id: "m2", text: "Привіт! Так, трохи можна поторгуватися. Яка ваша пропозиція?", time: "12:32", isOwn: false, status: "read" },
@@ -68,6 +70,7 @@ const chats: Chat[] = [
     tab: "buying",
     listingTitle: "MacBook Air M2",
     listingPrice: "52 000 ₴",
+    listingImage: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=80&h=80&fit=crop&auto=format",
     messages: [
       { id: "m1", text: "Хочу замовити MacBook Air M2", time: "09:00", isOwn: true, status: "read" },
       { id: "m2", text: "Звичайно! Уточніть конфігурацію, будь ласка.", time: "09:10", isOwn: false, status: "read" },
@@ -88,6 +91,7 @@ const chats: Chat[] = [
     tab: "selling",
     listingTitle: "Диван кутовий",
     listingPrice: "8 900 ₴",
+    listingImage: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=80&h=80&fit=crop&auto=format",
     messages: [
       { id: "m1", text: "Ще продається?", time: "Вч", isOwn: false, status: "delivered" },
     ],
@@ -105,6 +109,7 @@ const chats: Chat[] = [
     tab: "selling",
     listingTitle: 'Телевізор Samsung 55"',
     listingPrice: "14 200 ₴",
+    listingImage: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=80&h=80&fit=crop&auto=format",
     messages: [
       { id: "m1", text: "Здрастуйте, чи можна забрати сьогодні?", time: "Пн 10:00", isOwn: false, status: "read" },
       { id: "m2", text: "Сьогодні не виходить, але завтра — залюбки", time: "Пн 10:30", isOwn: true, status: "read" },
@@ -249,7 +254,7 @@ export function ChatsPage({ language }: ChatsPageProps) {
                 );
               }}
               className={cn(
-                "w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/60 transition-colors text-left border-b border-border/40",
+                "w-full flex items-center gap-3 px-4 py-4 hover:bg-secondary/60 transition-colors text-left border-b border-border/40",
                 selectedChatId === chat.id && "bg-primary/8 border-l-2 border-l-primary"
               )}
             >
@@ -269,9 +274,18 @@ export function ChatsPage({ language }: ChatsPageProps) {
                   <span className="text-sm font-semibold text-foreground truncate">{chat.name}</span>
                   <span className="text-[11px] text-muted-foreground shrink-0 ml-2">{chat.time}</span>
                 </div>
-                {/* Listing chip */}
-                <div className="text-[10px] text-primary font-medium mb-0.5 truncate">
-                  {chat.listingTitle} · {chat.listingPrice}
+                {/* Listing chip with thumbnail */}
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {chat.listingImage && (
+                    <img
+                      src={chat.listingImage}
+                      alt={chat.listingTitle}
+                      className="w-7 h-7 rounded-md object-cover shrink-0 border border-border/50"
+                    />
+                  )}
+                  <span className="text-[10px] text-primary font-medium truncate">
+                    {chat.listingTitle} · {chat.listingPrice}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground truncate pr-2">{chat.lastMessage}</span>

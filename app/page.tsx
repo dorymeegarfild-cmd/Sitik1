@@ -7,10 +7,11 @@ import { ProfilePage } from "@/components/profile-page";
 import { SettingsPage } from "@/components/settings-page";
 import { ChatsPage } from "@/components/chats-page";
 import { PostAdPage } from "@/components/post-ad-page";
+import { ShopPage } from "@/components/shop-page";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Heart } from "lucide-react";
 
-export type Page = "home" | "profile" | "favorites" | "chats" | "settings" | "category" | "post";
+export type Page = "home" | "profile" | "favorites" | "chats" | "settings" | "category" | "post" | "shop";
 export type Language = "uk" | "ru";
 
 export default function App() {
@@ -32,7 +33,7 @@ export default function App() {
       const hash = window.location.hash.replace("#", "") || "home";
       const parts = hash.split("/");
       const page = parts[0] as Page;
-      const validPages: Page[] = ["home", "profile", "favorites", "chats", "settings", "category"];
+      const validPages: Page[] = ["home", "profile", "favorites", "chats", "settings", "category", "shop"];
       if (validPages.includes(page)) {
         setCurrentPage(page);
         if (page === "category" && parts[1]) setActiveCategory(parts[1]);
@@ -97,6 +98,9 @@ export default function App() {
         )}
         {currentPage === "post" && (
           <PostAdPage onNavigate={navigate} language={language} />
+        )}
+        {currentPage === "shop" && (
+          <ShopPage onNavigate={navigate} language={language} />
         )}
       </div>
 
